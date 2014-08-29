@@ -1,30 +1,39 @@
 import org.specs2.mutable._
 import org.specs2.runner._
 import org.junit.runner._
-
 import play.api.test._
 import play.api.test.Helpers._
+import de.thovid.play.hateoas._
+import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.libs.json.JsValue
 
-/**
- * Add your spec here.
- * You can mock out a whole application including requests, plugins etc.
- * For more information, consult the wiki.
- */
 @RunWith(classOf[JUnitRunner])
 class ApplicationSpec extends Specification {
 
-  "Application" should {
+  "HATEOAS Client" should {
 
-    "send 404 on a bad request" in new WithApplication{
-      route(FakeRequest(GET, "/boum")) must beNone
+    "get some json reponse" in new WithServer {
+      val result = HATEOAS.client
+        .at(s"http://localhost:$port/samples/1")
+        .get()
+        .asJson {
+          case (OK, json) => name(json)
+        }
+      result must beRight("First Sample").await
     }
 
-    "render the index page" in new WithApplication{
-      val home = route(FakeRequest(GET, "/")).get
+    "follow a link selected from a list of entries" in new WithServer {
+      val result = HATEOAS.client
+        .at(s"http://localhost:$port/samples")
+        .following("self", selectedBy("samples" -> "id", "2"))
+        .get()
+        .asJson {
+          case (OK, json) => name(json)
+        }
 
-      status(home) must equalTo(OK)
-      contentType(home) must beSome.which(_ == "text/html")
-      contentAsString(home) must contain ("Your new application is ready.")
+      result must beRight("Second Sample").await
     }
   }
+
+  private def name(json: JsValue): Either[String, String] = (json \ "name").asOpt[String] map (n => Right(n)) getOrElse (Left("nok"))
 }

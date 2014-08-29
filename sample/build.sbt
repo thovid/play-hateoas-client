@@ -9,3 +9,7 @@ libraryDependencies ++= Seq(
 )     
 
 play.Project.playScalaSettings
+
+lazy val module = RootProject(file("../module"))
+
+lazy val main = project.in(file(".")).dependsOn(module)
