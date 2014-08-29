@@ -25,6 +25,7 @@ package de.thovid.play.hateoas {
     def get()(implicit executor: ExecutionContext): RESTResponse
     def delete()(implicit executor: ExecutionContext): RESTResponse
     def post(body: JsValue)(implicit executor: ExecutionContext): RESTResponse
+    def put(body: JsValue)(implicit executor: ExecutionContext): RESTResponse
     def following(rel: String, selection: LinkSelection): RESTRequest
     def following(rel: String): RESTRequest = following(rel, fromToplevel)
   }
@@ -57,27 +58,23 @@ package de.thovid.play.hateoas {
 
       def at(url: String): RESTRequest = new SingleCallRequest(this, url)
 
-      private[implementation] def executeGet(url: String)(implicit executor: ExecutionContext): Future[Either[String, (Int, JsValue)]] = {
-        Logger.debug(s"calling method GET for url $url")
-        serviceCall(url).get map (r => {
-          val result = (r.status, json(r))
-          Logger.debug(s"received response $result")
-          Right(result)
-        })
-      }
+      private[implementation] def executeGet(url: String)(implicit executor: ExecutionContext): Future[Either[String, (Int, JsValue)]] =
+        execute(url, _.get, "GET")
 
-      private[implementation] def executeDelete(url: String)(implicit executor: ExecutionContext): Future[Either[String, (Int, JsValue)]] = {
-        Logger.debug(s"calling method DELETE for url $url")
-        serviceCall(url).delete map (r => {
-          val result = (r.status, json(r))
-          Logger.debug(s"received response $result")
-          Right(result)
-        })
-      }
+      private[implementation] def executeDelete(url: String)(implicit executor: ExecutionContext): Future[Either[String, (Int, JsValue)]] =
+        execute(url, _.delete, "DELETE")
 
-      private[implementation] def executePost(url: String, body: JsValue)(implicit executor: ExecutionContext): Future[Either[String, (Int, JsValue)]] = {
-        Logger.debug(s"calling method POST for url $url")
-        serviceCall(url).post(body) map (r => {
+      private[implementation] def executePost(url: String,
+        body: JsValue)(implicit executor: ExecutionContext): Future[Either[String, (Int, JsValue)]] = execute(url, _.post(body), "POST")
+
+      private[implementation] def executePut(url: String,
+        body: JsValue)(implicit executor: ExecutionContext): Future[Either[String, (Int, JsValue)]] = execute(url, _.put(body), "PUT")
+
+      private def execute(url: String,
+        method: WSRequestHolder => Future[Response],
+        methodName: String)(implicit executor: ExecutionContext): Future[Either[String, (Int, JsValue)]] = {
+        Logger.debug(s"calling method $methodName for url $url")
+        method(serviceCall(url)) map (r => {
           val result = (r.status, json(r))
           Logger.debug(s"received response $result")
           Right(result)
@@ -97,19 +94,16 @@ package de.thovid.play.hateoas {
 
     private[implementation] abstract class AbstractRESTRequest(service: PlayHATEOASClient) extends RESTRequest {
       def following(rel: String, selection: LinkSelection): RESTRequest = new ChainedCallRequest(service, rel, selection, this)
-
     }
 
     private[implementation] class SingleCallRequest(service: PlayHATEOASClient, url: String) extends AbstractRESTRequest(service) {
-      def get()(implicit executor: ExecutionContext): RESTResponse = {
-        new RESTResponse(service.executeGet(url))
-      }
-      def post(body: JsValue)(implicit executor: ExecutionContext): RESTResponse = {
-        new RESTResponse(service.executePost(url, body))
-      }
-      def delete()(implicit executor: ExecutionContext): RESTResponse = {
-        new RESTResponse(service.executeDelete(url))
-      }
+      def get()(implicit executor: ExecutionContext): RESTResponse = new RESTResponse(service.executeGet(url))
+
+      def post(body: JsValue)(implicit executor: ExecutionContext): RESTResponse = new RESTResponse(service.executePost(url, body))
+
+      def put(body: JsValue)(implicit executor: ExecutionContext): RESTResponse = new RESTResponse(service.executePut(url, body))
+
+      def delete()(implicit executor: ExecutionContext): RESTResponse = new RESTResponse(service.executeDelete(url))
     }
 
     private[implementation] class ChainedCallRequest(service: PlayHATEOASClient,
@@ -122,6 +116,8 @@ package de.thovid.play.hateoas {
       def delete()(implicit executor: ExecutionContext): RESTResponse = call(link => service.executeDelete(link.path))
 
       def post(body: JsValue)(implicit executor: ExecutionContext): RESTResponse = call(link => service.executePost(link.path, body))
+
+      def put(body: JsValue)(implicit executor: ExecutionContext): RESTResponse = call(link => service.executePut(link.path, body))
 
       private def call(method: Link => Future[Either[String, (Int, JsValue)]])(implicit executor: ExecutionContext): RESTResponse = {
         val result = parent.get.asJson {
