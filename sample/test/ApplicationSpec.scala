@@ -45,6 +45,17 @@ class ApplicationSpec extends Specification {
       
       result must beLeft.await
     }
+    
+    "not fail if endoint does not answer" in new WithServer {
+      val result = HATEOAS.client
+        .at("http://does.not.exist")
+        .get()
+        .asJson {
+          case (OK, json) => name(json)
+        }
+      
+      result must beLeft.await
+    }
   }
 
   private def name(json: JsValue): Either[String, String] = (json \ "name").asOpt[String] map (n => Right(n)) getOrElse (Left("nok"))

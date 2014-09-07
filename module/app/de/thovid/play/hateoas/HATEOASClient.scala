@@ -8,6 +8,7 @@ import play.api.libs.ws.WS.WSRequestHolder
 import de.thovid.play.hateoas.linkformat.LinkFormat
 import de.thovid.play.hateoas.linkformat.spring.SpringLinkFormat
 import com.fasterxml.jackson.core.JsonParseException
+import java.net.ConnectException
 
 package de.thovid.play.hateoas {
 
@@ -74,12 +75,14 @@ package de.thovid.play.hateoas {
       private def execute(url: String,
         method: WSRequestHolder => Future[Response],
         methodName: String)(implicit executor: ExecutionContext): Future[Either[String, (Int, JsValue)]] = {
-        Logger.debug(s"calling method $methodName for url $url")
+        Logger.debug(s"calling $methodName $url")
         method(serviceCall(url)) map (r => {
           val result = json(r).right.map(j => (r.status, j))
           Logger.debug(s"received response ${r.status}: ${r.body}")
           result
-        })
+        }) recover {
+          case e: ConnectException => Left(s"error: could not connect to $url")
+        }
       }
 
       private def serviceCall(url: String) = addAuth(WS.url(url)).withHeaders(headers: _*)
