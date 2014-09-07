@@ -36,6 +36,11 @@ object Application extends Controller {
   def add = Action(BodyParsers.parse.json) { implicit request =>
     Ok
   }
+
+  def doSomething = Action {
+    implicit request =>
+      Ok("hi, im not json")
+  }
 }
 
 case class Sample(id: String, name: String)

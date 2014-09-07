@@ -7,6 +7,7 @@ import play.api.libs.ws._
 import play.api.libs.ws.WS.WSRequestHolder
 import de.thovid.play.hateoas.linkformat.LinkFormat
 import de.thovid.play.hateoas.linkformat.spring.SpringLinkFormat
+import com.fasterxml.jackson.core.JsonParseException
 
 package de.thovid.play.hateoas {
 
@@ -75,9 +76,9 @@ package de.thovid.play.hateoas {
         methodName: String)(implicit executor: ExecutionContext): Future[Either[String, (Int, JsValue)]] = {
         Logger.debug(s"calling method $methodName for url $url")
         method(serviceCall(url)) map (r => {
-          val result = (r.status, json(r))
-          Logger.debug(s"received response $result")
-          Right(result)
+          val result = json(r).right.map(j => (r.status, j))
+          Logger.debug(s"received response ${r.status}: ${r.body}")
+          result
         })
       }
 
@@ -89,7 +90,11 @@ package de.thovid.play.hateoas {
       private def asError(method: String, path: String, response: Response) =
         Left(s"error: $method $path returned ${response.status} - ${response.statusText}")
 
-      private def json(response: Response): JsValue = if (response.body.isEmpty) Json.obj() else response.json
+      private def json(response: Response): Either[String, JsValue] =
+        if (response.body.isEmpty) Right(Json.obj())
+        else try { Right(response.json) } catch {
+          case e: JsonParseException => Left("error: body not json")
+        }
     }
 
     private[implementation] abstract class AbstractRESTRequest(service: PlayHATEOASClient) extends RESTRequest {

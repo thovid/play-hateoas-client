@@ -34,6 +34,17 @@ class ApplicationSpec extends Specification {
 
       result must beRight("Second Sample").await
     }
+
+    "not fail if result is not json" in new WithServer {
+      val result = HATEOAS.client
+        .at(s"http://localhost:$port/errors/not-json")
+        .get()
+        .asJson {
+          case (OK, json) => name(json)
+        }
+      
+      result must beLeft.await
+    }
   }
 
   private def name(json: JsValue): Either[String, String] = (json \ "name").asOpt[String] map (n => Right(n)) getOrElse (Left("nok"))
