@@ -9,7 +9,7 @@ class SpringLinkFormatSpecification extends Specification {
     "value" -> 42,
     "links" -> Json.arr(Json.obj(
       "rel" -> "self",
-      "path" -> "some.url.com")))
+      "href" -> "some.url.com")))
 
   "link reader" should {
     import de.thovid.play.hateoas.linkformat.spring.SpringLinkFormat._

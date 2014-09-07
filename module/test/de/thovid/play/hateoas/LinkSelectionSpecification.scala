@@ -14,11 +14,11 @@ class LinkSelectionSpecification extends Specification {
         Json.obj(
           "id" -> "1",
           "links" -> Json.arr(
-            Json.obj("rel" -> "test", "path" -> "test/path/1"))),
+            Json.obj("rel" -> "test", "href" -> "test/path/1"))),
         Json.obj(
           "id" -> "2",
           "links" -> Json.arr(
-            Json.obj("rel" -> "test", "path" -> "test/path/2"))))
+            Json.obj("rel" -> "test", "href" -> "test/path/2"))))
 
       selectedBy("id", "2")
         .select(json, SpringLinkFormat) must beRight(Links(Link(rel = "test", path = "test/path/2")))
@@ -29,7 +29,7 @@ class LinkSelectionSpecification extends Specification {
         Json.obj(
           "id" -> "1",
           "links" -> Json.arr(
-            Json.obj("rel" -> "test", "path" -> "test/path/1"))))
+            Json.obj("rel" -> "test", "href" -> "test/path/1"))))
 
       selectedBy("id", "2")
         .select(json, SpringLinkFormat) must beLeft("error: no element with id = 2")
@@ -41,11 +41,11 @@ class LinkSelectionSpecification extends Specification {
           Json.obj(
             "id" -> "1",
             "links" -> Json.arr(
-              Json.obj("rel" -> "test", "path" -> "test/path/1"))),
+              Json.obj("rel" -> "test", "href" -> "test/path/1"))),
           Json.obj(
             "id" -> "2",
             "links" -> Json.arr(
-              Json.obj("rel" -> "test", "path" -> "test/path/2")))))
+              Json.obj("rel" -> "test", "href" -> "test/path/2")))))
 
       selectedBy("elements" -> "id", "2")
         .select(json, SpringLinkFormat) must beRight(Links(Link(rel = "test", path = "test/path/2")))
@@ -57,7 +57,7 @@ class LinkSelectionSpecification extends Specification {
           Json.obj(
             "id" -> "1",
             "links" -> Json.arr(
-              Json.obj("rel" -> "test", "path" -> "test/path/1")))))
+              Json.obj("rel" -> "test", "href" -> "test/path/1")))))
 
       selectedBy("stuff" -> "id", "1")
         .select(json, SpringLinkFormat) must beLeft("error: no element with name stuff")
@@ -68,11 +68,11 @@ class LinkSelectionSpecification extends Specification {
         Json.obj(
           "id" -> 42,
           "links" -> Json.arr(
-            Json.obj("rel" -> "test", "path" -> "test/path/1"))),
+            Json.obj("rel" -> "test", "href" -> "test/path/1"))),
         Json.obj(
           "id" -> 43,
           "links" -> Json.arr(
-            Json.obj("rel" -> "test", "path" -> "test/path/2"))))
+            Json.obj("rel" -> "test", "href" -> "test/path/2"))))
 
       selectedBy("id", 43)
         .select(json, SpringLinkFormat) must beRight(Links(Link(rel = "test", path = "test/path/2")))
@@ -84,7 +84,7 @@ class LinkSelectionSpecification extends Specification {
       val json = Json.obj(
         "something" -> "ignore",
         "links" -> Json.arr(
-          Json.obj("rel" -> "test", "path" -> "test/path")))
+          Json.obj("rel" -> "test", "href" -> "test/path")))
 
       fromToplevel()
         .select(json, SpringLinkFormat) must beRight(Links(Link(rel = "test", path = "test/path")))

@@ -18,12 +18,12 @@ object SpringLinkFormat extends LinkFormat {
 
   implicit lazy val linkReads: Reads[Link] = (
     (JsPath \ "rel").read[String] and
-    (JsPath \ "path").read[String])((path, rel) => Link(path, rel))
+    (JsPath \ "href").read[String])((rel, path) => Link(rel, path))
 
   implicit lazy val linkWrites: Writes[Link] = new Writes[Link] {
     def writes(link: Link) = Json.obj(
       "rel" -> link.rel,
-      "path" -> link.path)
+      "href" -> link.path)
   }
 
   implicit lazy val linksReads = new Reads[Links] {
