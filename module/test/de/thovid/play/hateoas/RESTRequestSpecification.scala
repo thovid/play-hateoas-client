@@ -44,7 +44,7 @@ class RESTRequestSpecification extends Specification with Mockito {
       val service: PlayHATEOASClient = mock[PlayHATEOASClient]
         .executeGet(url) returns Future.successful(Right(200, Json.obj("ok" -> true)))
       val linkSelection: LinkSelection = mock[LinkSelection]
-        .select(any) returns (Right(Links(Link(rel = "link", path = url))))
+        .select(any, any) returns (Right(Links(Link(rel = "link", path = url))))
 
       val result = new ChainedCallRequest(service, "link", linkSelection, parent).get
       result.asJson { case (200, json) => if ((json \ "ok").as[Boolean]) Right(true) else Left("") } must beRight(true).await
@@ -56,7 +56,7 @@ class RESTRequestSpecification extends Specification with Mockito {
       val service: PlayHATEOASClient = mock[PlayHATEOASClient]
         .executeGet(url) returns Future.successful(Right(200, Json.obj("ok" -> true)))
       val linkSelection: LinkSelection = mock[LinkSelection]
-        .select(any) returns (Right(Links(Link(rel = "link", path = url))))
+        .select(any, any) returns (Right(Links(Link(rel = "link", path = url))))
 
       val result = new ChainedCallRequest(service, "not_found", linkSelection, parent).get
       result.asJson { case (200, json) => if ((json \ "ok").as[Boolean]) Right(true) else Left("") } must beLeft("error: no link with rel = not_found found").await

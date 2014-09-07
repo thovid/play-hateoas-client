@@ -1,12 +1,13 @@
 package de.thovid.play.hateoas
 
 import org.specs2.mutable.Specification
-
 import play.api.libs.json.Json
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
+import de.thovid.play.hateoas.linkformat.spring.SpringLinkFormat
 
 class LinkSelectionSpecification extends Specification {
-
+  import de.thovid.play.hateoas.linkformat.spring.SpringLinkFormat._
+  
   "selection from array by path" should {
     "select single element with id" in {
       val json = Json.arr(
@@ -20,7 +21,7 @@ class LinkSelectionSpecification extends Specification {
             Json.obj("rel" -> "test", "path" -> "test/path/2"))))
 
       selectedBy("id", "2")
-        .select(json) must beRight(Links(Link(rel = "test", path = "test/path/2")))
+        .select(json, SpringLinkFormat) must beRight(Links(Link(rel = "test", path = "test/path/2")))
     }
 
     "produce error if element with requested id is not found" in {
@@ -31,7 +32,7 @@ class LinkSelectionSpecification extends Specification {
             Json.obj("rel" -> "test", "path" -> "test/path/1"))))
 
       selectedBy("id", "2")
-        .select(json) must beLeft("error: no element with id = 2")
+        .select(json, SpringLinkFormat) must beLeft("error: no element with id = 2")
     }
 
     "select element from named array" in {
@@ -47,7 +48,7 @@ class LinkSelectionSpecification extends Specification {
               Json.obj("rel" -> "test", "path" -> "test/path/2")))))
 
       selectedBy("elements" -> "id", "2")
-        .select(json) must beRight(Links(Link(rel = "test", path = "test/path/2")))
+        .select(json, SpringLinkFormat) must beRight(Links(Link(rel = "test", path = "test/path/2")))
     }
 
     "produce error if named array not found" in {
@@ -59,7 +60,7 @@ class LinkSelectionSpecification extends Specification {
               Json.obj("rel" -> "test", "path" -> "test/path/1")))))
 
       selectedBy("stuff" -> "id", "1")
-        .select(json) must beLeft("error: no element with name stuff")
+        .select(json, SpringLinkFormat) must beLeft("error: no element with name stuff")
     }
 
     "be able to select by integer id" in {
@@ -74,7 +75,7 @@ class LinkSelectionSpecification extends Specification {
             Json.obj("rel" -> "test", "path" -> "test/path/2"))))
 
       selectedBy("id", 43)
-        .select(json) must beRight(Links(Link(rel = "test", path = "test/path/2")))
+        .select(json, SpringLinkFormat) must beRight(Links(Link(rel = "test", path = "test/path/2")))
     }
   }
 
@@ -86,7 +87,7 @@ class LinkSelectionSpecification extends Specification {
           Json.obj("rel" -> "test", "path" -> "test/path")))
 
       fromToplevel()
-        .select(json) must beRight(Links(Link(rel = "test", path = "test/path")))
+        .select(json, SpringLinkFormat) must beRight(Links(Link(rel = "test", path = "test/path")))
     }
   }
 }

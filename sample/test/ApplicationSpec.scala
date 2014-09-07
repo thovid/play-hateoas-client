@@ -4,6 +4,7 @@ import org.junit.runner._
 import play.api.test._
 import play.api.test.Helpers._
 import de.thovid.play.hateoas._
+import de.thovid.play.hateoas.linkformat.spring.SpringLinkFormat._
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json.JsValue
 

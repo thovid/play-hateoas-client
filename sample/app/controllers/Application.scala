@@ -3,6 +3,7 @@ package controllers
 import play.api._
 import play.api.mvc._
 import de.thovid.play.hateoas._
+import de.thovid.play.hateoas.linkformat.spring.SpringLinkFormat._
 import play.api.libs.json.Json
 
 object Application extends Controller {

@@ -1,18 +1,18 @@
 import scala.concurrent._
-
 import com.ning.http.client.Realm.AuthScheme
-
 import de.thovid.play.hateoas._
-
 import play.api.Logger
 import play.api.libs.json._
 import play.api.libs.ws._
 import play.api.libs.ws.WS.WSRequestHolder
+import de.thovid.play.hateoas.linkformat.LinkFormat
+import de.thovid.play.hateoas.linkformat.spring.SpringLinkFormat
 
 package de.thovid.play.hateoas {
 
   object HATEOAS {
-    def client: HATEOASClient = new implementation.PlayHATEOASClient
+    def client: HATEOASClient = client(SpringLinkFormat)
+    def client(linkFormat: LinkFormat): HATEOASClient = new implementation.PlayHATEOASClient(linkFormat)
   }
 
   trait HATEOASClient {
@@ -31,7 +31,7 @@ package de.thovid.play.hateoas {
   }
 
   trait LinkSelection {
-    def select(json: JsValue): Either[String, Links]
+    def select(json: JsValue, linkFormat: LinkFormat): Either[String, Links]
   }
 
   class RESTResponse(result: Future[Either[String, (Int, JsValue)]]) {
@@ -48,13 +48,13 @@ package de.thovid.play.hateoas {
   package implementation {
 
     class PlayHATEOASClient(val auth: Option[(String, String, AuthScheme)],
-      val headers: Seq[(String, String)]) extends HATEOASClient {
-      def this() = this(None, List())
+      val headers: Seq[(String, String)], val linkFormat: LinkFormat) extends HATEOASClient {
+      def this(linkFormat: LinkFormat) = this(None, List(), linkFormat)
 
       def withAuth(userName: String, password: String, scheme: AuthScheme): PlayHATEOASClient =
-        new PlayHATEOASClient(Some(userName, password, scheme), headers)
+        new PlayHATEOASClient(Some(userName, password, scheme), headers, linkFormat)
 
-      def withHeaders(hdrs: (String, String)*): PlayHATEOASClient = new PlayHATEOASClient(auth, headers ++ hdrs)
+      def withHeaders(hdrs: (String, String)*): PlayHATEOASClient = new PlayHATEOASClient(auth, headers ++ hdrs, linkFormat)
 
       def at(url: String): RESTRequest = new SingleCallRequest(this, url)
 
@@ -121,7 +121,7 @@ package de.thovid.play.hateoas {
 
       private def call(method: Link => Future[Either[String, (Int, JsValue)]])(implicit executor: ExecutionContext): RESTResponse = {
         val result = parent.get.asJson {
-          case (200, json) => linkSelection.select(json)
+          case (200, json) => linkSelection.select(json, service.linkFormat)
         }.flatMap {
           _.fold(
             error => Future.successful(Left(error)),
