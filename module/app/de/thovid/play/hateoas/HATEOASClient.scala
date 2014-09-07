@@ -85,7 +85,7 @@ package de.thovid.play.hateoas {
         }
       }
 
-      private def serviceCall(url: String) = addAuth(WS.url(url)).withHeaders(headers: _*)
+      private def serviceCall(url: String) = addAuth(WS.url(url)).withHeaders(headers: _*).withFollowRedirects(true)
 
       private def addAuth(requestHolder: WSRequestHolder) =
         auth map { a => requestHolder.withAuth(a._1, a._2, a._3) } getOrElse (requestHolder)
