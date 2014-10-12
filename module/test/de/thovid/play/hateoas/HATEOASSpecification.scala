@@ -9,6 +9,7 @@ import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.mvc.Action
+import play.api.mvc.Handler
 import play.api.mvc.Results.NotFound
 import play.api.mvc.Results.Ok
 import play.api.test.FakeApplication
@@ -68,15 +69,16 @@ class HATEOASSpecification extends Specification {
 }
 
 object TestApplication {
-  val port = 3333
-  val app = FakeApplication(withRoutes = routes)
 
-  val routes: PartialFunction[(String, String), play.api.mvc.Handler] = {
+  val routes: PartialFunction[(String, String), Handler] = {
     case ("GET", "/samples") => TestApplication.list
     case ("GET", "/samples/1") => TestApplication.get("1")
     case ("GET", "/samples/2") => TestApplication.get("2")
     case ("GET", "/errors/not-json") => TestApplication.getNonJson
   }
+
+  val port = 3333
+  val app = FakeApplication(withRoutes = routes)
 
   val samples = Map(
     "1" -> Sample("1", "First Sample"),
