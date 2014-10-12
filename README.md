@@ -1,5 +1,7 @@
 Play HATEOAS client
 =================
+[![Build Status](https://travis-ci.org/thovid/play-hateoas-client.svg?branch=master)](https://travis-ci.org/thovid/play-hateoas-client)
+
 
 This is a simple playframework module for working with HATEOAS services.
 
