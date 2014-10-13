@@ -5,6 +5,13 @@ Play HATEOAS client
 
 This is a simple playframework module for working with HATEOAS services.
 
+Features
+------------------
+   * chain service calls following links
+   * provide http authentication information
+   * provide custom http headers
+   * expand uri templates (using https://github.com/arktekk/uri-template)
+
 Getting the module
 ------------------
 

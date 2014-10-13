@@ -9,6 +9,8 @@ import de.thovid.play.hateoas.linkformat.LinkFormat
 import de.thovid.play.hateoas.linkformat.spring.SpringLinkFormat
 import com.fasterxml.jackson.core.JsonParseException
 import java.net.ConnectException
+import uritemplate.URITemplate
+import uritemplate.Variable
 
 package de.thovid.play.hateoas {
 
@@ -21,6 +23,7 @@ package de.thovid.play.hateoas {
     def withAuth(userName: String, password: String, scheme: AuthScheme): HATEOASClient
     def withHeaders(hdrs: (String, String)*): HATEOASClient
     def at(url: String): RESTRequest
+    def withTemplateParameters(params: (String, String)*): HATEOASClient
   }
 
   trait RESTRequest {
@@ -50,15 +53,19 @@ package de.thovid.play.hateoas {
   package implementation {
 
     class PlayHATEOASClient(val auth: Option[(String, String, AuthScheme)],
-      val headers: Seq[(String, String)], val linkFormat: LinkFormat) extends HATEOASClient {
-      def this(linkFormat: LinkFormat) = this(None, List(), linkFormat)
+      val headers: Seq[(String, String)],
+      val templateParameters: Map[String, Option[Variable]],
+      val linkFormat: LinkFormat) extends HATEOASClient {
+      def this(linkFormat: LinkFormat) = this(None, List(), Map(), linkFormat)
 
       def withAuth(userName: String, password: String, scheme: AuthScheme): PlayHATEOASClient =
-        new PlayHATEOASClient(Some(userName, password, scheme), headers, linkFormat)
+        new PlayHATEOASClient(Some(userName, password, scheme), headers, templateParameters, linkFormat)
 
-      def withHeaders(hdrs: (String, String)*): PlayHATEOASClient = new PlayHATEOASClient(auth, headers ++ hdrs, linkFormat)
+      def withHeaders(hdrs: (String, String)*): PlayHATEOASClient = new PlayHATEOASClient(auth, headers ++ hdrs, templateParameters, linkFormat)
 
       def at(url: String): RESTRequest = new SingleCallRequest(this, url)
+
+      def withTemplateParameters(params: (String, String)*): PlayHATEOASClient = new PlayHATEOASClient(auth, headers, templateParameters ++ asMap(params), linkFormat)
 
       private[implementation] def executeGet(url: String)(implicit executor: ExecutionContext): Future[Either[String, (Int, JsValue)]] =
         execute(url, _.get, "GET")
@@ -85,7 +92,7 @@ package de.thovid.play.hateoas {
         }
       }
 
-      private def serviceCall(url: String) = addAuth(WS.url(url)).withHeaders(headers: _*).withFollowRedirects(true)
+      private def serviceCall(url: String) = addAuth(WS.url(applyTemplateParameters(url))).withHeaders(headers: _*).withFollowRedirects(true)
 
       private def addAuth(requestHolder: WSRequestHolder) =
         auth map { a => requestHolder.withAuth(a._1, a._2, a._3) } getOrElse (requestHolder)
@@ -98,6 +105,13 @@ package de.thovid.play.hateoas {
         else try { Right(response.json) } catch {
           case e: JsonParseException => Left("error: body not json")
         }
+
+      private def asMap(params: Seq[(String, String)]): Map[String, Option[Variable]] = {
+        import uritemplate.Syntax._
+        params.foldLeft(Map[String, Option[Variable]]()) { (m, p) => m + (p._1 := p._2) }
+      }
+
+      private def applyTemplateParameters(url: String) = URITemplate(url).expand(templateParameters)
     }
 
     private[implementation] abstract class AbstractRESTRequest(service: PlayHATEOASClient) extends RESTRequest {

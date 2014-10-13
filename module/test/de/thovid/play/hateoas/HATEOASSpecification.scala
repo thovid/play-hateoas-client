@@ -63,6 +63,19 @@ class HATEOASSpecification extends Specification {
 
       result must beLeft.await
     }
+
+    "substitute variables in uri templates while following the links" in new WithServer(app = TestApplication.app, port = TestApplication.port) {
+      val result = HATEOAS.client
+        .withTemplateParameters("id" -> "1")
+        .at(s"http://localhost:$port/")
+        .following("sample")
+        .get()
+        .asJson {
+          case (OK, json) => name(json)
+        }
+
+      result must beRight("First Sample").await
+    }
   }
 
   private def name(json: JsValue): Either[String, String] = (json \ "name").asOpt[String] map (n => Right(n)) getOrElse (Left("nok"))
@@ -71,6 +84,7 @@ class HATEOASSpecification extends Specification {
 object TestApplication {
 
   val routes: PartialFunction[(String, String), Handler] = {
+    case ("GET", "/") => TestApplication.root
     case ("GET", "/samples") => TestApplication.list
     case ("GET", "/samples/1") => TestApplication.get("1")
     case ("GET", "/samples/2") => TestApplication.get("2")
@@ -83,6 +97,12 @@ object TestApplication {
   val samples = Map(
     "1" -> Sample("1", "First Sample"),
     "2" -> Sample("2", "Second Sample"))
+
+  def root = Action { implicit request =>
+    Ok(Json.obj("links" -> Json.arr(
+      Link(rel = "samples", path = s"http://localhost:$port/samples"),
+      Link(rel = "sample", path = s"http://localhost:$port/samples{/id}"))))
+  }
 
   def list = Action { implicit request =>
     Ok(Json.obj(
