@@ -16,7 +16,7 @@ resolvers += Resolver.url("thovid play modules on github (releases)", url("http:
 resolvers += Resolver.url("thovid play modules on github (snapshots)", url("http://thovid.github.com/snapshots/"))(Resolver.ivyStylePatterns)
 ```
 
-the the build file and using the dependency
+to the build file and using the dependency
 
 ```
 "de.thovid" %% "play-hateoas-client" % "1.0-SNAPSHOT"
