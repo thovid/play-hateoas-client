@@ -26,13 +26,13 @@ resolvers += Resolver.url("thovid play modules on github (snapshots)", url("http
 to the build file and using the dependency
 
 ```
-"de.thovid" %% "play-hateoas-client" % "1.0-SNAPSHOT"
+"de.thovid" %% "play-hateoas-client" % "1.0.0"
 ```
 
 Supported versions
 ------------------
 
-Currently, only playframework 2.2.x and scala 2.10 are supported. The module is in an early stage of development. The current version is 1.0-SNAPSHOT.
+Currently, only playframework 2.2.x and scala 2.10 are supported. The module is in an early stage of development. The current version is 1.0.0.
 
 
 Using the module

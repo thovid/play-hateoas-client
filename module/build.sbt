@@ -1,10 +1,10 @@
 name := "play-hateoas-client"
 
-version := "1.0-SNAPSHOT"
+version := "1.0.0"
 
 organization := "de.thovid"
 
-startYear := Some(2013)
+startYear := Some(2014)
 
 description := "Play framework 2.x module implementing a simple HATEOAS client"
 
