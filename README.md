@@ -89,5 +89,5 @@ The code above makes two calls: First a GET to the provided url. It expects the 
 
 Licence
 ------------------
-APACHE 2 Licence 
+APACHE 2 License 
 http://www.apache.org/licenses/LICENSE-2.0.txt
